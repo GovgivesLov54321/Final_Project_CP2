@@ -1,7 +1,7 @@
 # Final_Project_CP2
 ***
 ![Image of code while running](location of image in folders)
-Paragraph description of the project
+This project is..
 
 ## How to use
 ***
