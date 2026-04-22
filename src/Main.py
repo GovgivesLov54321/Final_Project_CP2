@@ -2,7 +2,6 @@ import pygame
 import sys
 import random
 
-# ---------------- SETTINGS ----------------
 Width, Height = 800, 600
 Frames = 60
 
@@ -31,7 +30,7 @@ PlayerStart = (120, Height - 120)
 
 pygame.init()
 
-# ---------------- HELPERS ----------------
+
 def load_image(path, scale, fallback_color):
     try:
         img = pygame.image.load(path).convert_alpha()
@@ -41,12 +40,15 @@ def load_image(path, scale, fallback_color):
         surf.fill(fallback_color)
         return surf
 
-# ---------------- PLAYER ----------------
+
+# BACKGROUND
+Background = load_image("docs/Frames/Idle.png", (Width, Height), (20, 20, 40))
+
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
 
-        # LOAD PNGs
         self.idle = load_image("docs/Frames/Idle.png", PlayerScale, (0,100,255))
         self.walk = [
             load_image("docs/Frames/WalkCharacter.png", PlayerScale, (0,100,255)),
@@ -55,7 +57,6 @@ class Player(pygame.sprite.Sprite):
         self.jump_img = load_image("docs/Frames/Jump.png", PlayerScale, (0,100,255))
         self.dash_img = load_image("docs/Frames/Dash.png", PlayerScale, (0,100,255))
 
-        # FLIP
         self.walk_l = [pygame.transform.flip(f, True, False) for f in self.walk]
         self.idle_l = pygame.transform.flip(self.idle, True, False)
         self.jump_l = pygame.transform.flip(self.jump_img, True, False)
@@ -67,6 +68,8 @@ class Player(pygame.sprite.Sprite):
         self.vel_y = 0
         self.on_ground = False
         self.jumps = 2
+
+        self.coyote_timer = 0
 
         self.facing_right = True
         self.walk_index = 0
@@ -83,13 +86,13 @@ class Player(pygame.sprite.Sprite):
         if self.dash_timer > 0:
             self.dash_timer -= 1
         else:
-            self.dash_vel = 0  # FIX: stop dash cleanly
+            self.dash_vel = 0
 
         # FACING
         if dx > 0: self.facing_right = True
         if dx < 0: self.facing_right = False
 
-        # ANIMATION STATE
+        # ANIMATION
         if self.dash_timer > 0:
             self.image = self.dash_img if self.facing_right else self.dash_l
 
@@ -97,7 +100,7 @@ class Player(pygame.sprite.Sprite):
             self.image = self.jump_img if self.facing_right else self.jump_l
 
         elif dx != 0:
-            self.walk_timer += 1
+            self.walk_timer += abs(dx)
             if self.walk_timer >= 10:
                 self.walk_timer = 0
                 self.walk_index = (self.walk_index + 1) % len(self.walk)
@@ -108,18 +111,24 @@ class Player(pygame.sprite.Sprite):
         else:
             self.image = self.idle if self.facing_right else self.idle_l
 
-        # MOVEMENT
+        # HORIZONTAL (ANTI-TUNNEL)
         move_x = dx + self.dash_vel
-        self.rect.x += move_x
+        for _ in range(abs(int(move_x))):
+            self.rect.x += 1 if move_x > 0 else -1
 
-        for p in pygame.sprite.spritecollide(self, platforms, False):
-            if move_x > 0:
-                self.rect.right = p.rect.left
-            elif move_x < 0:
-                self.rect.left = p.rect.right
+            for p in pygame.sprite.spritecollide(self, platforms, False):
+                if move_x > 0:
+                    self.rect.right = p.rect.left
+                else:
+                    self.rect.left = p.rect.right
+                break
 
         # GRAVITY
-        self.vel_y += Gravity
+        if self.dash_timer > 0:
+            self.vel_y += Gravity * 0.3
+        else:
+            self.vel_y += Gravity
+
         if self.vel_y > MaxFall:
             self.vel_y = MaxFall
 
@@ -127,18 +136,44 @@ class Player(pygame.sprite.Sprite):
         self.on_ground = False
 
         for p in pygame.sprite.spritecollide(self, platforms, False):
+            # HAZARD (only hurts when landing on it)
+            if p.kind == "hazard" and self.vel_y > 0:
+                self.reset()
+                return
+
             if self.vel_y > 0:
                 self.rect.bottom = p.rect.top
                 self.vel_y = 0
+
+                if not self.on_ground:
+                    self.jumps = 2
+
                 self.on_ground = True
-                self.jumps = 2
+
             elif self.vel_y < 0:
                 self.rect.top = p.rect.bottom
                 self.vel_y = 0
 
-        # ENEMY HIT
+        # COYOTE TIME
+        if self.on_ground:
+            self.coyote_timer = 6
+        else:
+            self.coyote_timer -= 1
+
+        # MOVING PLATFORM CARRY
+        if self.on_ground:
+            for p in pygame.sprite.spritecollide(self, platforms, False):
+                if p.kind == "moving":
+                    self.rect.x += p.speed
+
+        # ENEMY INTERACTION (STOMP)
         for e in pygame.sprite.spritecollide(self, enemies, False):
-            self.reset()
+            if self.vel_y > 0 and self.rect.bottom <= e.rect.top + 20:
+                enemies.remove(e)
+                all_sprites.remove(e)
+                self.vel_y = -10
+            else:
+                self.reset()
 
         # FLOOR
         if self.rect.bottom >= Height:
@@ -147,8 +182,12 @@ class Player(pygame.sprite.Sprite):
             self.on_ground = True
             self.jumps = 2
 
+        # SCREEN CLAMP
+        self.rect.left = max(0, self.rect.left)
+        self.rect.right = min(Width, self.rect.right)
+
     def jump(self):
-        if self.jumps > 0:
+        if self.jumps > 0 or self.coyote_timer > 0:
             self.vel_y = -JumpStrength
             self.jumps -= 1
             self.on_ground = False
@@ -164,14 +203,41 @@ class Player(pygame.sprite.Sprite):
         self.vel_y = 0
         self.jumps = 2
 
-# ---------------- PLATFORM ----------------
-class Platform(pygame.sprite.Sprite):
-    def __init__(self, x, y, w, h):
-        super().__init__()
-        self.image = load_image("docs/Frames/Platform.png", (w,h), PlatformColor)
-        self.rect = self.image.get_rect(topleft=(x,y))
 
-# ---------------- ENEMY ----------------
+class Platform(pygame.sprite.Sprite):
+    def __init__(self, x, y, w, h, kind="normal"):
+        super().__init__()
+
+        self.kind = kind
+
+        if kind == "hazard":
+            self.image = load_image(
+                "docs/Frames/HazardPlatform.png",
+                (w, h),
+                (255, 80, 80)
+            )
+        else:
+            self.image = load_image(
+                "docs/Frames/Platform.png",
+                (w, h),
+                PlatformColor
+            )
+
+        self.rect = self.image.get_rect(topleft=(x, y))
+
+        if kind == "moving":
+            self.start_x = x
+            self.range = random.randint(60, 140)
+            self.speed = random.choice([-2, 2])
+
+    def update(self):
+        if self.kind == "moving":
+            self.rect.x += self.speed
+
+            if abs(self.rect.x - self.start_x) > self.range:
+                self.speed *= -1
+
+
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
@@ -184,14 +250,14 @@ class Enemy(pygame.sprite.Sprite):
         if self.rect.left < 0 or self.rect.right > Width:
             self.vel *= -1
 
-# ---------------- EXIT ----------------
+
 class Exit(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         self.image = load_image("docs/Frames/Pizza.png", ExitScale, ExitColor)
         self.rect = self.image.get_rect(topleft=(x,y))
 
-# ---------------- MAIN ----------------
+
 screen = pygame.display.set_mode((Width, Height))
 clock = pygame.time.Clock()
 
@@ -201,6 +267,7 @@ enemies = pygame.sprite.Group()
 exit_group = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group(player)
 
+
 def regenerate():
     platforms.empty()
     enemies.empty()
@@ -208,16 +275,21 @@ def regenerate():
     all_sprites.empty()
     all_sprites.add(player)
 
-    # GROUND
     ground = Platform(0, Height-40, Width, 40)
     platforms.add(ground)
     all_sprites.add(ground)
 
-    # STACKED PLATFORMS
     y = Height - 120
+    prev_x = Width // 2
+
     for _ in range(NumberBasePlatforms):
-        x = random.randint(40, Width-160)
-        p = Platform(x, y, random.randint(100,200), 20)
+        x = prev_x + random.randint(-120, 120)
+        x = max(40, min(Width-160, x))
+        prev_x = x
+
+        kind = random.choice(["normal", "normal", "moving", "hazard"])
+
+        p = Platform(x, y, random.randint(100,200), 20, kind)
         platforms.add(p)
         all_sprites.add(p)
 
@@ -225,22 +297,21 @@ def regenerate():
         if y < 80:
             break
 
-    # ENEMIES
     for _ in range(4):
         e = Enemy(random.randint(0,Width-50), random.randint(0,Height-200))
         enemies.add(e)
         all_sprites.add(e)
 
-    # EXIT
     ex = Exit(random.randint(100,Width-100), 50)
     exit_group.add(ex)
     all_sprites.add(ex)
 
     player.reset()
 
+
 regenerate()
 
-# ---------------- GAME LOOP ----------------
+
 while True:
     for e in pygame.event.get():
         if e.type == pygame.QUIT:
@@ -250,18 +321,19 @@ while True:
             if e.key == pygame.K_SPACE:
                 player.jump()
             if e.key == pygame.K_x:
-                player.dash()#this now wont break yaya
+                player.dash()
 
     keys = pygame.key.get_pressed()
     dx = (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]) * PlayerSpeed
 
     player.update(dx, platforms, enemies)
     enemies.update()
+    platforms.update()
 
     if pygame.sprite.spritecollideany(player, exit_group):
         regenerate()
 
-    screen.fill((30,30,50))
+    screen.blit(Background, (0,0))
     all_sprites.draw(screen)
 
     pygame.display.flip()
