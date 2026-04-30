@@ -1,0 +1,82 @@
+#SETUP
+#  define constants: screen size, gravity, jump/dash values, platform counts
+#
+#  load images (with fallback solid colors if files missing)
+#  init pygame, font, sprite groups
+#  wins = 0, deaths = 0
+#
+#FUNCTION log_event(type)
+#  create CSV file with header if it doesn't exist
+#  append row: [type, wins, deaths]
+#
+#FUNCTION regenerate()
+#  clear all sprite groups
+#  create new Player at starting position
+#  create ground platform spanning full width
+#
+#  repeat 8 times (or until near top of screen):
+#    pick x near previous platform's x (random walk)
+#    pick kind: normal / normal / moving / hazard (weighted)
+#    create platform at current y, then move y upward by random gap
+#
+#  spawn 4 enemies at random positions
+#  place Exit above the highest platform
+#
+#CLASS Player
+#  STATE: position, vel_y, jumps_remaining, coyote_timer
+#         facing_right, dash_timer, dash_cooldown, dash_vel
+#
+#  EVERY FRAME (update):
+#    tick down dash and cooldown timers
+#    pick animation frame (dash > airborne > walking > idle)
+#
+#    move horizontally by (input + dash velocity)
+#    resolve horizontal collisions with platforms (push out left/right)
+#
+#    apply gravity to vel_y (unless dashing)
+#    move vertically by vel_y
+#    resolve vertical collisions with platforms:
+#      if hazard platform → reset()
+#      if landing on top  → snap to surface, restore jumps, set on_ground
+#      if hitting ceiling → snap below, zero vel_y
+#
+#    update coyote_timer
+#    check enemy collisions:
+#      if stomping (falling + above enemy center) → kill enemy, bounce up
+#      else → reset()
+#
+#    clamp position to screen bounds
+#
+#  jump():
+#    if jumps > 0 or coyote_timer > 0: launch upward, decrement jumps
+#
+#  dash():
+#    if cooldown ready: set dash_vel in facing direction, start timers
+#
+#  reset():
+#    deaths++, log "death"
+#    return to start position, zero velocity and dash state
+#
+#CLASS Platform
+#  if kind == "moving": oscillate left/right within a random range each frame
+#
+#CLASS Enemy
+#  move horizontally, reverse at screen edges
+#
+#CLASS Exit
+#  static sprite; touching it triggers a win
+#
+#MAIN LOOP (60fps)
+#  handle events:
+#    SPACE → player.jump()
+#    X     → player.dash()
+#
+#  read held keys → compute dx
+#
+#  update player, enemies, platforms
+#
+#  if player touches Exit:
+#    wins++, log "win", regenerate()
+#
+#  draw background → sprites → HUD text
+#  flip display
