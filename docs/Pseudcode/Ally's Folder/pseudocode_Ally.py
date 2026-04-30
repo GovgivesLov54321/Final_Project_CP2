@@ -11,9 +11,12 @@
 
 
 
-
-# 
 # LOG IN - CREATE ACC
+
+# INFORMATION - this is a list of dictionaries that represent a user
+
+# Active Status or not Active Status
+
 # Import Hashlib and Import User resgistration
 # Import os
 
@@ -37,12 +40,18 @@ func view_profile
 func valid_password"""
 
 # DEF View_delete():
+    # Display we have to itirate through lists
  # Pass
 
 # DEF Signout():
+    # reset user status to inactive
+    # 
  # pass
 
 # DEF View_Profile():
+    # User status is set to active and displays 
     # pass
 
 # DEF Validated_Password():
+
+# 
