@@ -2,18 +2,21 @@ GNB - Pseudocode to make leaderboard look pretty
 
 End up here from Ally's main menu if user wants to view the leaderboard:
 
-Options: 1. View Leaderboard -- 2. Return to Main Menu
+Display options to User as: 1. View Leaderboard -- 2. Return to Main Menu
 
-Define function as order_rankings():
-    read the csv from Ally
-    re-write to have bigger score 
+Define function as order_scores():
+    read from Ally’s csv, the columns for top five scores
+    re-organize, by writing to have 5 largest scores in descending order
 
+Define function as prettify_list():
+	take from Ally’s renewed scores list, and print for every row in the csv in a certain format: (f"RANK NUMBER {row["rank number"]} == USERNAME {row["username"]} == SCORE {row["score"]})
+
+I believe this’ll also be used when showing the User if they made leaderboard or not: If this is the case, then just run the option 1
 
 If 1: 
-    Get user info from Ally's User/password json
-    Score csv using read mode (Username, score, and something else)
-    Organize each user to certain rank number based off their score (read/rewrite csv by row)
-    
+    Print the “=====HIGH SCORES=====” title thing up top
+    Run the “order_scores” function
+    Run the “prettify_list” function
  
 
 If 2:
