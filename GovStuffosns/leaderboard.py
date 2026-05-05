@@ -1,5 +1,5 @@
 # GNB - Code to make leaderboard look pretty
-
+import csv
 # End up here from Ally's main menu if user wants to view the leaderboard:
 
 # Display options to User as: 1. View Leaderboard -- 2. Return to Main Menu
@@ -10,6 +10,15 @@ choice = input("Welcome to the Leaderboard, User!" \
 # Define function as order_scores():
 def order_scores():
     # read from Ally’s csv, the columns for top five scores
+    with open("docs\Storage Places\scores.csv", "r+") as csv_file:
+        content = csv.reader()
+        headers = next(content)
+        rows = []
+        
+        for x in content:
+            rows.append({headers[0]:x[0],headers[1]:x[1],headers[2]:x[2]})
+        #return the list
+        return rows
     # re-organize, by writing to have 5 largest scores in descending order
 
 
