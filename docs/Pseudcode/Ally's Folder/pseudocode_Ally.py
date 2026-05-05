@@ -1,3 +1,5 @@
+# AR 1st Final Project
+
 # START PROGRAM
 
 #     call initialize_system
@@ -164,5 +166,3 @@
 #     close window
 #     stop program
 # end function
-
-# HI THIHIHTIHTIHTIT
