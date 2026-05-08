@@ -3,7 +3,7 @@ import sys
 import random
 import math
 
-
+# --- Config ---
 Width, Height = 800, 600
 Frames = 60
 
@@ -29,7 +29,6 @@ NumberBasePlatforms = 8
 
 PlayerStart = (120, Height - 120)
 
-
 BackgroundTop    = ( 25,  15,  50)
 BackgroundBot    = ( 25,  15,  50)
 CAccent    = (130,  80, 255)
@@ -45,7 +44,6 @@ pygame.init()
 screen = pygame.display.set_mode((Width, Height))
 pygame.display.set_caption("Platformer")
 clock = pygame.time.Clock()
-
 
 try:
     font_big   = pygame.font.SysFont("consolas", 36, bold=True)
@@ -76,24 +74,17 @@ def load_image(path, scale, fallback_color):
         return surf
 
 
+# --- BACKGROUND: use only the imported PNG ---
+# This will prefer the PNG you load. If it fails to load, a solid fallback color is used.
 Background = load_image("docs/Frames/BG.png", (Width, Height), (20, 20, 40))
 
+# Disable generated gradient and star layers (we only want the PNG)
+gradient_bg = None
+StarLayers = []
+StarOffsets = []
+StarSpeeds  = []
 
-def make_gradient_bg():
-    surf = pygame.Surface((Width, Height))
-    return surf
-
-gradient_bg = make_gradient_bg()
-
-# Parallax star layers
-def make_star_layer(n, alpha):
-    surf = pygame.Surface((Width, Height), pygame.SRCALPHA)
-    return surf
-
-StarLayers = [make_star_layer(60, 180), make_star_layer(40, 120), make_star_layer(20, 80)]
-StarOffsets = [0.0, 0.0, 0.0]
-StarSpeeds  = [0.15, 0.08, 0.04]   # parallax speeds relative to camera
-
+# --- Screen effects ---
 ShakeTimer    = 0
 ShakeStrength = 0
 
@@ -134,7 +125,7 @@ def draw_flash(surf):
         FlashTimer -= 1
 
 
-Particles = []   # each: [x, y, vx, vy, life, max_life, color, size]
+Particles = []   # each: [x, y, vx, vy, life, max_life, color, size, gravity]
 
 def spawn_particles(x, y, n, color, speed=3, size=3, gravity=0.15, spread=360):
     for _ in range(n):
@@ -167,9 +158,7 @@ def update_draw_particles(surf):
             continue
         alpha_ratio = p[4] / p[5]
         r,g,b = p[6]
-        a = int(255 * alpha_ratio)
         sz = max(1, int(p[7] * alpha_ratio))
-        # draw with alpha via separate surface is expensive; use direct color fade
         color = (int(r*alpha_ratio), int(g*alpha_ratio), int(b*alpha_ratio))
         pygame.draw.circle(surf, color, (int(p[0]), int(p[1])), sz)
     for p in dead:
@@ -378,8 +367,6 @@ class Player(pygame.sprite.Sprite):
         radius = 14
         pygame.draw.circle(surf, ColorDashEmpty, (cx,cy), radius, 3)
         if ratio > 0:
-            arc_rect = pygame.Rect(cx-radius, cy-radius, radius*2, radius*2)
-            # draw arc via points
             start_angle = -math.pi/2
             end_angle   = start_angle + ratio*2*math.pi
             steps = max(2, int(ratio*32))
@@ -421,11 +408,9 @@ class Platform(pygame.sprite.Sprite):
         if self.kind == "moving":
             pulse = 0.5 + 0.5*math.sin(self.glow_anim)
             alpha = int(30 + 40*pulse)
-            
         elif self.kind == "hazard":
             pulse = 0.5 + 0.5*math.sin(self.glow_anim*2)
             alpha = int(40 + 60*pulse)
-            
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -443,7 +428,6 @@ class Enemy(pygame.sprite.Sprite):
             self.vel *= -1
 
     def draw_indicator(self, surf):
-        """Arrow above enemy showing it can be stomped.(I removed it didnt fit the style)"""
         cx = self.rect.centerx
         ty = self.rect.top - 12 - int(3*math.sin(self.bob))
         pts = [(cx, ty), (cx-6, ty+8), (cx+6, ty+8)]
@@ -462,7 +446,6 @@ class Exit(pygame.sprite.Sprite):
     def draw_glow(self, surf):
         p = 0.5 + 0.5*math.sin(self.pulse)
         alpha = int(50 + 80*p)
-        
 
 
 # Sprites
@@ -540,7 +523,7 @@ def draw_hud(surf):
     lbl = font_small.render(label, True, ColorDashFill if ratio>=1 else (120,160,200))
     hud_surf.blit(lbl, (BarX + barW//2 - lbl.get_width()//2, BarY - 18))
 
-   #game over 
+    #game over 
     if lives <= 0:
         draw_text_shadow(hud_surf, "GAME OVER — press R", font_big, ColorRed, (Width//2-180, Height//2-20))
 
@@ -597,18 +580,11 @@ while running:
     # Render to a temp surface so shake can offset the whole scene
     scene = pygame.Surface((Width, Height))
 
-    # Background
-    scene.blit(gradient_bg, (0,0))
-
-    # Parallax stars scroll with player (subtle)
-    for i, sl in enumerate(StarLayers):
-        ox = int(StarOffsets[i]) % Width
-        scene.blit(sl, (-ox, 0))
-        if ox > 0:
-            scene.blit(sl, (Width-ox, 0))
-    # Scroll stars
-    for i in range(len(StarOffsets)):
-        StarOffsets[i] += StarSpeeds[i]
+    # Background: prefer the loaded PNG; fallback to solid fill if missing
+    if Background and Background.get_size() == (Width, Height):
+        scene.blit(Background, (0, 0))
+    else:
+        scene.fill((20, 20, 40))
 
     # Platform glows (behind sprites)
     for p in platforms:
