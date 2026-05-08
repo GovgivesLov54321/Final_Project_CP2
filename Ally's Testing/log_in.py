@@ -3,16 +3,16 @@ from user_registration import *
 import os
 import pygame
 import sys
+import csv
 
 # Helper function to clear the console
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-information = load_csv()
+information = load_csv("stats.csv")
 
-# ─────────────────────────────────────────────
 # PYGAME PLACEHOLDER — replace with your game
-# ─────────────────────────────────────────────
+
 def launch_game(username, high_score):
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
@@ -47,7 +47,7 @@ def launch_game(username, high_score):
         clock.tick(60)
 
     pygame.quit()
-# ─────────────────────────────────────────────
+
 
 def log_in(information):
     information = sign_out(information)
@@ -147,3 +147,52 @@ def valid_password(password):
         print("Password must include at least one letter.")
         return False
     return True
+
+
+def load_csv():
+    # Attempt to load the data; if file doesn't exist, return an empty list
+    try:
+        with open('users.csv', mode='r', newline='') as f:
+            reader = csv.DictReader(f)
+            return list(reader)
+    except FileNotFoundError:
+        return []
+
+def save_csv(information):
+    if not information:
+        return
+    # Save the current list of users back to the CSV
+    with open('users.csv', mode='w', newline='') as f:
+        fieldnames = information[0].keys()
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(information)
+
+def main_menu():
+    global information
+    while True:
+        clear()
+        print("=== WELCOME TO THE GAME ===")
+        print("1. Login & Play")
+        print("2. Create New Account") # Assumes this is in user_registration.py
+        print("3. View/Delete Accounts")
+        print("4. Exit")
+        
+        choice = input("\nSelect an option: ")
+        
+        if choice == '1':
+            information, result = log_in(information)
+            # After game closes, ensure we save any highscore updates
+            save_csv(information)
+        elif choice == '2':
+            # This calls your imported user_registration functions
+            information = registration(information) 
+            save_csv(information)
+        elif choice == '3':
+            information = view_delete(information)
+            save_csv(information)
+        elif choice == '4':
+            sys.exit()
+
+if __name__ == "__main__":
+    main_menu()
