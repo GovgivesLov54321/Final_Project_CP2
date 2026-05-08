@@ -1,49 +1,40 @@
-
-
 import hashlib
 import csv
+import pygame
 
-def register(users):
-    usernames = []
-    for user in users:
-        usernames.append(user["username"])
-    valid_user = False
-    while valid_user == False:
-        username = input("Please input a username: ")
-        if username in usernames:
-            print("There is already a user with that username, please choose another.")
-            continue
-        else:
-            valid_user = True
-        password = input("Please input a password: ")
-        password_encoded = password.encode("utf-8")
-        hashed_password = hashlib.shake_128(password_encoded)
-        hex_password = hashed_password.hexdigest(4)
-        users.append({"username" : username, "password" : hex_password, "high score" : 0, "status" : "active"})
-        return users
-    
-def display_profile(users):
-    for user in users:
-        if user["status"] == "active":
-            print(f"Useranme: {user["username"]}\nHighscore: {user["high score"]}")
+# ─────────────────────────────────────────────
+# PYGAME PLACEHOLDER — replace with your game
+# ─────────────────────────────────────────────
+def launch_game(username, high_score):
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    pygame.display.set_caption("Game")
+    clock = pygame.time.Clock()
+    font = pygame.font.SysFont(None, 48)
+    small_font = pygame.font.SysFont(None, 32)
 
-def load_csv():
-    with open("docs/user_info.csv", "r") as user_list:
-        content = csv.reader(user_list)
-        row_count = sum(1 for row in content)
-        user_list.seek(0)
-        if row_count == 0:
-            headers = ["username", "password", "high score", "status"]
-        else:
-            headers = next(content)
-        rows = []
-        for line in content:
-            rows.append({headers[0] : line[0], headers[1] : line[1], headers[2] : line[2], headers[3] : line[3]})
-        return rows
-    
-def save_changes(users):
-    feildnames = ["username", "password", "high score", "status"]
-    with open("docs/user_info.csv", "w", newline = "") as user_list:
-        writer = csv.DictWriter(user_list, fieldnames = feildnames)
-        writer.writeheader()
-        writer.writerows(users)
+    running = True
+    while running:
+        screen.fill((30, 30, 46))
+
+        title      = font.render("Game Placeholder", True, (205, 214, 244))
+        user_text  = small_font.render(f"Logged in as: {username}", True, (166, 227, 161))
+        score_text = small_font.render(f"High Score: {high_score}", True, (250, 219, 99))
+        quit_text  = small_font.render("Press ESC or close window to quit", True, (180, 180, 180))
+
+        screen.blit(title,      (800 // 2 - title.get_width() // 2,      200))
+        screen.blit(user_text,  (800 // 2 - user_text.get_width() // 2,  290))
+        screen.blit(score_text, (800 // 2 - score_text.get_width() // 2, 330))
+        screen.blit(quit_text,  (800 // 2 - quit_text.get_width() // 2,  420))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                running = False
+
+        pygame.display.flip()
+        clock.tick(60)
+
+    pygame.quit()
+# ──────────────────────────────────
