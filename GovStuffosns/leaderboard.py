@@ -1,5 +1,5 @@
 # GNB - Code to make leaderboard look pretty
-
+#work pls
 import csv
 import pygame
 
