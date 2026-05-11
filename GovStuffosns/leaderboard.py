@@ -1,77 +1,206 @@
 # GNB - Code to make leaderboard look pretty
+#work pls
 import csv
 import pygame
 
-# End up here from Ally's main menu if user wants to view the leaderboard:
 
-# Display options to User as: 1. View Leaderboard -- 2. Return to Main Menu
-choice = input("Welcome to the Leaderboard, User!" \
-"1. View Leaderboard" \
-"2. Return to Main Menu")
+# PYGAME SETUP
 
-# Define function as score_csv_reader():
+pygame.init()
+
+WINDOW_WIDTH = 800
+WINDOW_HEIGHT = 600
+
+screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+pygame.display.set_caption("Leaderboard")
+
+font = pygame.font.SysFont("arial", 28)
+small_font = pygame.font.SysFont("arial", 22)
+
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GOLD = (255, 215, 0)
+GRAY = (180, 180, 180)
+
+
+# END UP HERE FROM ALLY'S MENU
+
+# Ally's stuff can call leaderboard_main()
+# when user chooses leaderboard option
+
+
+# READ CSV FUNCTION
+
 def score_csv_reader():
-    # read from Ally’s csv, the columns for top five scores
-    with open("docs\Storage Places\scores.csv", "r+") as csv_file:
-        content = csv.reader()
-        headers = next(content)
-        rows = []
-        
-        for x in content:
-            rows.append({headers[0]:x[0],headers[1]:x[1],headers[2]:x[2]})
-        #return the list
-        return rows
 
-# Define function as order_scores():
-def order_scores(csv_rows, new_row):
-    # re-organize, by writing to have 5 largest scores in descending order
-    #function for rank finding
+    rows = []
+
+    # read from Ally’s csv file
+    try:
+        with open("docs/Storage Places/scores.csv", "r", newline="") as csv_file:
+
+            content = csv.DictReader(csv_file)
+
+            # put each row into list
+            for row in content:
+                rows.append(row)
+
+    except FileNotFoundError:
+        print("scores.csv file not found.")
+
+    return rows
+
+
+# FORMAT NEW ROW
+
+# this helps format incoming score data
+# from Ally's game system
+
+def new_row_format(new_row):
+
+    formatted_row = {
+        "rank number": "",
+        "username": str(new_row["username"]),
+        "score": int(new_row["score"])
+    }
+
+    return formatted_row
+
+
+# ORDER SCORES
+
+def order_scores(csv_rows, new_row=None):
+
+    # helper function for sorting
     def get_ratio(csv_row):
         return float(csv_row["ratio"])
+
     rank = 1
 
-    #use the incoming new row which has (blank,username,p1 score, p2 score, p2 bot, win/lose ratio)
-    #compare it to all of the other scores currently in the file
-    new_row = new_row_format(new_row)
-    csv_rows.append(new_row)
+    # if a new row comes from Ally's game
+    if new_row is not None:
 
-    #what .sort does is take numerical values and put them in order from greatest to least, if reverse is active, it does least to greatest
-    csv_rows.sort(key=get_ratio,reverse=True)
+        new_row = new_row_format(new_row)
+        csv_rows.append(new_row)
 
-    #after they are sorted so highest is on the top we can just assign each of the inline scores a rank one after another in order
+    # sort highest ratios first
+    csv_rows.sort(key=get_ratio, reverse=True)
+
+    # only keep top 5
+    csv_rows = csv_rows[:5]
+
+    # give rankings
     for row in csv_rows:
         row["rank number"] = rank
-        rank+=1
+        rank += 1
 
-    #write all the data to the csv file
-    with open("Files/score_data.csv", "w",newline="") as file:
-        fieldnames = ["rank number","username","player one score","player two score","Bot","ratio"]
-        writer = csv.DictWriter(file,fieldnames=fieldnames)
+    # save updated rankings
+    with open("docs/Storage Places/scores.csv", "w", newline="") as file:
+
+        fieldnames = [
+            "rank number",
+            "username",
+            "score"
+        ]
+
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+
         writer.writeheader()
-        for x in csv_rows:
-            writer.writerow({"rank number":x["rank number"],"username":x["username"],"player one score":x["player one score"],"player two score":x["player two score"],"Bot":x["Bot"],"ratio":x["ratio"]})
-    #return the list of properly ranked stuff
+
+        for row in csv_rows:
+            writer.writerow(row)
+
     return csv_rows
 
 
-# Define function as prettify_list():
-def prettify_list():
-    print("===== HIGH SCORES =====")
-	# take from Ally’s renewed scores list, and print for every row in the csv in a certain format: (f"RANK NUMBER {row["rank number"]} == USERNAME {row["username"]} == SCORE {row["score"]})
-    print(f"RANK NUMBER {row["rank number"]} == USERNAME {row["username"]} == SCORE {row["player one score"]}")
-    
+# DRAW LEADERBOARD
 
-# I believe this’ll also be used when showing the User if they made leaderboard or not: If this is the case, then just run the option 1
+def prettify_list(rows):
 
-# Define function as leaderboard_main():
+    screen.fill(BLACK)
+
+    # title
+    title = font.render("===== HIGH SCORES =====", True, GOLD)
+    screen.blit(title, (190, 40))
+
+    # column labels
+    headers = small_font.render(
+        "RANK    USERNAME    SCORE",
+        True,
+        WHITE
+    )
+
+    screen.blit(headers, (100, 120))
+
+    y_position = 180
+
+    # print every row nicely
+    for row in rows:
+
+        leaderboard_text = (
+            f"{row['rank number']}        "
+            f"{row['username']}        "
+            f"{row['score']}        "
+        )
+
+        text_surface = small_font.render(
+            leaderboard_text,
+            True,
+            GRAY
+        )
+
+        screen.blit(text_surface, (100, y_position))
+
+        y_position += 50
+
+    # small instructions
+    back_text = small_font.render(
+        "Press ESC to return to menu",
+        True,
+        WHITE
+    )
+
+    screen.blit(back_text, (240, 520))
+
+    pygame.display.update()
+
+
+# MAIN LEADERBOARD FUNCTION
+
 def leaderboard_main():
-    
-    # If 1: 
-        # Print the “=====HIGH SCORES=====” title thing up top
-        # Run the “order_scores” function
-        # Run the “prettify_list” function
+
+    running = True
+
+    # read csv
+    rows = score_csv_reader()
+
+    # organize scores
+    ordered_rows = order_scores(rows)
+
+    while running:
+
+        # draw leaderboard
+        prettify_list(ordered_rows)
+
+        # pygame events
+        for event in pygame.event.get():
+
+            # close window
+            if event.type == pygame.QUIT:
+                running = False
+
+            # keyboard controls
+            if event.type == pygame.KEYDOWN:
+
+                # return to Ally's menu
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+
+    pygame.quit()
 
 
-    # If 2:
-        # Return to menu
+# TESTING TESTING
 
+# remove this later when connected to Ally's main
+
+leaderboard_main()
