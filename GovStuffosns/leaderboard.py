@@ -65,6 +65,7 @@ def prettify_list():
 
 # Define function as leaderboard_main():
 def leaderboard_main():
+    
     # If 1: 
         # Print the “=====HIGH SCORES=====” title thing up top
         # Run the “order_scores” function
