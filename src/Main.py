@@ -11,7 +11,7 @@ Gravity        = 0.5
 JumpStrength   = 13
 MaxFall        = 15
 PlayerSpeed    = 5
-DashBoost      = 18
+DashBoost      = 20
 DashDuration   = 12
 DashCooldown   = 90
 
@@ -513,15 +513,6 @@ def draw_hud(surf):
         pygame.draw.circle(hud_surf, (255,255,255,60), (cx,cy), 8, 1)
 
     #dash cooldown bar
-    BarX, BarY, barW, BarH = Width//2 - 50, Height-28, 100, 10
-    pygame.draw.rect(hud_surf, ColorDashEmpty+(180,), (BarX-1, BarY-1, barW+2, BarH+2), border_radius=6)
-    ratio = 1 - player.dash_cd / DashCooldown
-    fill_w = int(barW * ratio)
-    if fill_w > 0:
-        pygame.draw.rect(hud_surf, ColorDashFill+(220,), (BarX, BarY, fill_w, BarH), border_radius=5)
-    label = "DASH" if ratio >= 1 else f"DASH  {int(ratio*100)}%"
-    lbl = font_small.render(label, True, ColorDashFill if ratio>=1 else (120,160,200))
-    hud_surf.blit(lbl, (BarX + barW//2 - lbl.get_width()//2, BarY - 18))
 
     #game over 
     if lives <= 0:
