@@ -1,15 +1,17 @@
 import hashlib
-from user_registration import *
+#from user_registration import *
 import os
 import pygame
 import sys
+import pandas as pd
 import csv
-
+import time
+from GovStuffosns import*
 # Helper function to clear the console
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-information = load_csv("stats.csv")
+information = pd.read_csv('docs\Csv\stats.csv')
 
 # PYGAME PLACEHOLDER — replace with your game
 
@@ -65,7 +67,7 @@ def log_in(information):
         if user_found:
             break
         else:
-            print("Username does not exist. Please try again.")
+            pygame.display.set_caption("Username does not exist. Please try again.")
             input("Press Enter to continue...")
 
     # Loop to get password
@@ -91,14 +93,14 @@ def log_in(information):
             launch_game(active_user["username"], active_user["high score"])
             return information, "game"
         else:
-            print("Incorrect password. Please try again.")
+            pygame.display.set_caption("Incorrect password. Please try again.")
             input("Press Enter to continue...")
 
 def view_delete(information):
     while True:
         clear()
         for idx, i in enumerate(information, start=1):
-            print(f"{idx}. Username: {i['username']}  |  Status: {i['status']}  |  Highscore: {i['high score']}")
+            pygame.display.set_caption(f"{idx}. Username: {i['username']}  |  Status: {i['status']}  |  Highscore: {i['high score']}")
 
         choice = input("\nType 'remove' to delete an account, or 'exit' to go back: ").strip().lower()
         if choice == "exit":
@@ -110,13 +112,13 @@ def view_delete(information):
                     break
                 if num.isdigit() and 1 <= int(num) <= len(information):
                     information.pop(int(num) - 1)
-                    print("Account removed successfully!")
+                    pygame.display.set_caption("Account removed successfully!")
                     input("Press Enter to continue...")
                     break
                 else:
-                    print("Invalid input. Try again.")
+                    pygame.display.set_caption("Invalid input. Try again.")
         else:
-            print("Invalid choice.")
+            pygame.display.set_caption("Invalid choice.")
             input("Press Enter to continue...")
 
 def sign_out(information):
@@ -129,22 +131,22 @@ def view_profile(information):
     clear()
     for i in information:
         if i["status"] == "active":
-            print(f"--- Your Profile ---\nUsername: {i['username']}\nHighscore: {i['high score']}")
+            pygame.display.set_caption(f"--- Your Profile ---\nUsername: {i['username']}\nHighscore: {i['high score']}")
             input("\nPress Enter to continue...")
             clear()
             return
-    print("No active user found.")
+    pygame.display.set_caption("No active user found.")
     input("\nPress Enter to continue...")
 
 def valid_password(password):
     if len(password) < 6:
-        print("Password must be at least 6 characters long.")
+        pygame.display.set_caption("Password must be at least 6 characters long.")
         return False
     if not any(char.isdigit() for char in password):
-        print("Password must include at least one number.")
+        pygame.display.set_caption("Password must include at least one number.")
         return False
     if not any(char.isalpha() for char in password):
-        print("Password must include at least one letter.")
+        pygame.display.set_caption("Password must include at least one letter.")
         return False
     return True
 
@@ -172,11 +174,11 @@ def main_menu():
     global information
     while True:
         clear()
-        print("=== WELCOME TO THE GAME ===")
-        print("1. Login & Play")
-        print("2. Create New Account") # Assumes this is in user_registration.py
-        print("3. View/Delete Accounts")
-        print("4. Exit")
+        pygame.display.set_caption("=== WELCOME TO THE GAME ===")
+        pygame.display.set_caption("1. Login & Play")
+        pygame.display.set_caption("2. Create New Account") # Assumes this is in user_registration.py
+        pygame.display.set_caption("3. View/Delete Accounts")
+        pygame.display.set_caption("4. Exit")
         
         choice = input("\nSelect an option: ")
         
@@ -194,5 +196,43 @@ def main_menu():
         elif choice == '4':
             sys.exit()
 
-if __name__ == "__main__":
-    main_menu()
+    def view_leaderboard():
+
+
+
+# 1. Setup
+pygame.init()
+
+screen = pygame.display.set_mode((800, 600))
+pygame.display.set_caption("Hello Pygame")
+
+clock = pygame.time.Clock()
+running = True
+
+font = pygame.font.SysFont('Arial', 32)
+text_surface = font.render('Hello Pygame!', True, (255, 255, 255))
+
+# 2. Main loop
+while running:
+
+    # Handle events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Clear screen
+    screen.fill("black")
+
+    # Draw text
+    screen.blit(text_surface, (50, 100))
+
+    # Update display
+    pygame.display.flip()
+
+    # Limit FPS
+    clock.tick(60)
+
+# 3. Clean up
+pygame.quit()
+main_menu()
+
