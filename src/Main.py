@@ -538,96 +538,80 @@ trans_surf = pygame.Surface((Width, Height))
 trans_surf.fill((30,255,120))
 
 
-#Main pygame loop
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit(); sys.exit()
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                player.jump()
-            if event.key == pygame.K_x:
-                player.dash()
-            if event.key == pygame.K_r and lives <= 0:
-                lives = 3; score = 0; level = 1
-                regenerate()
+def launch_game(username, high_score):
+    global score, level, lives
 
-    keys = pygame.key.get_pressed()
-    dx   = (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]) * PlayerSpeed
+    pygame.init()
+    screen = pygame.display.set_mode((Width, Height))
+    pygame.display.set_caption(f"Platformer - {username}")
+    clock = pygame.time.Clock()
 
-    if lives > 0:
-        player.update(dx, platforms, enemies)
-        enemies.update()
-        platforms.update()
-        for ex in exit_group: ex.update()
+    # Reset game state
+    score = 0
+    level = 1
+    lives = 3
+    regenerate()
 
-        if pygame.sprite.spritecollideany(player, exit_group):
-            start_transition()
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False   # Window closed
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False   # ESC pressed
+                if event.key == pygame.K_SPACE:
+                    player.jump()
+                if event.key == pygame.K_x:
+                    player.dash()
+                if event.key == pygame.K_r and lives <= 0:
+                    lives = 3
+                    score = 0
+                    level = 1
+                    regenerate()
 
-    #draw
-    shake_off = get_shake_offset()
+        keys = pygame.key.get_pressed()
+        dx = (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]) * PlayerSpeed
 
-    # Render to a temp surface so shake can offset the whole scene
-    scene = pygame.Surface((Width, Height))
+        if lives > 0:
+            player.update(dx, platforms, enemies)
+            enemies.update()
+            platforms.update()
+            for ex in exit_group:
+                ex.update()
 
-    # Background: prefer the loaded PNG; fallback to solid fill if missing
-    if Background and Background.get_size() == (Width, Height):
-        scene.blit(Background, (0, 0))
-    else:
-        scene.fill((20, 20, 40))
+            if pygame.sprite.spritecollideany(player, exit_group):
+                start_transition()
 
-    # Platform glows (behind sprites)
-    for p in platforms:
-        p.draw_glow(scene)
-    for ex in exit_group:
-        ex.draw_glow(scene)
+        # DRAW
+        shake_off = get_shake_offset()
+        scene = pygame.Surface((Width, Height))
 
-    # Sprites
-    player.DrawTrail(scene)
-    AllSprites.draw(scene)
+        if Background and Background.get_size() == (Width, Height):
+            scene.blit(Background, (0, 0))
+        else:
+            scene.fill((20, 20, 40))
 
-    # Enemy stomp indicators
-    for e in enemies:
-        e.draw_indicator(scene)
+        for p in platforms:
+            p.draw_glow(scene)
+        for ex in exit_group:
+            ex.draw_glow(scene)
 
-    # Dash ring under player
-    player.DrawDash(scene)
+        player.DrawTrail(scene)
+        AllSprites.draw(scene)
 
-    # Particles
-    update_draw_particles(scene)
+        for e in enemies:
+            e.draw_indicator(scene)
 
-    # Flash overlay
-    draw_flash(scene)
+        player.DrawDash(scene)
+        update_draw_particles(scene)
+        draw_flash(scene)
 
-    # Death fade
-    if DeathFade > 0:
-        a = int(200 * DeathFade/30)
-        FadeSurf.set_alpha(a)
-        scene.blit(FadeSurf, (0,0))
-        DeathFade -= 1
-    if RespawnFade > 0:
-        a = int(180 * RespawnFade/20)
-        FadeSurf.set_alpha(a)
-        scene.blit(FadeSurf, (0,0))
-        RespawnFade -= 1
+        screen.blit(scene, shake_off)
+        draw_hud(screen)
 
-    # Level transition flash
-    if transition_timer > 0:
-        a = int(220 * transition_timer/40)
-        trans_surf.set_alpha(a)
-        scene.blit(trans_surf, (0,0))
-        # big centred text
-        if transition_timer > 10:
-            draw_text_shadow(scene, f"LEVEL {level}!", font_big, ColorWhite,
-                             (Width//2-70, Height//2-20))
-        transition_timer -= 1
+        pygame.display.flip()
+        clock.tick(Frames)
 
-    # Blit scene to screen with shake offset
-    screen.blit(scene, shake_off)
-
-    # HUD drawn directly on screen (not shaken)
-    draw_hud(screen)
-
-    pygame.display.flip()
-    clock.tick(Frames)
+    pygame.quit()
+    return score
