@@ -1,7 +1,7 @@
 # Final_Project_CP2
 ***
 
-![alt text](docs/Frames/Frames/Image.png)
+![alt text](P:\Richmond,Mason\Richmond-Mason-main\Final_Project_CP2\docs\Frames\descript.png)
 ## How to use
 
 ***
@@ -27,6 +27,3 @@ Anything made for school has no copyright
 - AllyB23
 - richmondmason-bit
 - GovgivesLov54321
-## Contribute
-***
-Note being used for this class. Instructions for how to submit a change to the repository if it is open source
