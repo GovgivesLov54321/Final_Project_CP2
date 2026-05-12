@@ -1,9 +1,9 @@
 # Final_Project_CP2
 ***
-![Image of code while running](location of image in folders)
-This project is..
 
+![alt text](image.png)
 ## How to use
+
 ***
 1. Step by step instructions
 2. Detailing how to run your project
