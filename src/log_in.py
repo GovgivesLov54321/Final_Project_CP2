@@ -12,9 +12,9 @@ pygame.display.set_caption("Game Login")
 FONT = pygame.font.SysFont(None, 40)
 SMALL_FONT = pygame.font.SysFont(None, 28)
 
-# ─────────────────────────────────────────────
+
 # CSV FUNCTIONS
-# ─────────────────────────────────────────────
+
 
 def load_csv():
     try:
@@ -37,9 +37,8 @@ def save_csv(data):
             user_copy["high score"] = str(user_copy["high score"])
             writer.writerow(user_copy)
 
-# ─────────────────────────────────────────────
 # INPUT BOX CLASS
-# ─────────────────────────────────────────────
+
 
 class InputBox:
     def __init__(self, x, y, w, h, text=''):
@@ -65,9 +64,9 @@ class InputBox:
         txt_surface = FONT.render(self.text, True, (255, 255, 255))
         screen.blit(txt_surface, (self.rect.x + 5, self.rect.y + 5))
 
-# ─────────────────────────────────────────────
+
 # BUTTON CLASS
-# ─────────────────────────────────────────────
+
 
 class Button:
     def __init__(self, x, y, w, h, text):
@@ -85,9 +84,9 @@ class Button:
     def clicked(self, event):
         return event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos)
 
-# ─────────────────────────────────────────────
+
 # LOGIN SCREEN LOOP
-# ─────────────────────────────────────────────
+
 
 def login_screen():
     users = load_csv()
