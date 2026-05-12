@@ -196,10 +196,3 @@ def leaderboard_main():
                     running = False
 
     pygame.quit()
-
-
-# TESTING TESTING
-
-# remove this later when connected to Ally's main
-
-leaderboard_main()

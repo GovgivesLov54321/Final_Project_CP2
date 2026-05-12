@@ -5,9 +5,10 @@ This project is..
 
 ## How to use
 ***
-1. Step by step instructions
-2. Detailing how to run your project
-3. Including a list of any libraries that need downloaded
+1. You'll need to open a new terminal, type in: "pip install pygame", then press enter and wait till it's done
+2. Close the terminal afterwards by pressing the trashcan icon
+3. Press the play button in the top right corner whilst in the "log_in.py" folder
+4. You need to  
 
 ## Details on Project features
 ***
@@ -20,7 +21,7 @@ Not to be used in this class (Thank the men above) but if you have a full run fi
 
 ## License
 ***
-Anything made for school has no copyright
+No copyright - free to use
 
 ## Contributors
 ***
