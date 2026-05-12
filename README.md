@@ -1,7 +1,7 @@
 # Final_Project_CP2
 ***
 
-![alt text](docs\Frames\image.png)
+![alt text](docs/Frames/Frames/Image.png)
 ## How to use
 
 ***
