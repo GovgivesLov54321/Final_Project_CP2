@@ -2,6 +2,7 @@ import pygame
 import hashlib
 import csv
 from Main import launch_game
+from leaderboard import show_leaderboard
 
 pygame.init()
 
@@ -12,13 +13,15 @@ pygame.display.set_caption("Game Login")
 FONT = pygame.font.SysFont(None, 40)
 SMALL_FONT = pygame.font.SysFont(None, 28)
 
+CSV_PATH = "docs/Storage Places/scores.csv"
+
 
 # CSV FUNCTIONS
 
 
 def load_csv():
     try:
-        with open("docs/Storage Places/scores.csv", mode="r", newline="") as f:
+        with open(CSV_PATH, mode="r", newline="") as f:
             reader = csv.DictReader(f)
             data = list(reader)
             for user in data:
@@ -27,8 +30,9 @@ def load_csv():
     except FileNotFoundError:
         return []
 
+
 def save_csv(data):
-    with open("docs/Storage Places/scores.csv", mode="w", newline="") as f:
+    with open(CSV_PATH, mode="w", newline="") as f:
         fieldnames = ["username", "password", "high score"]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
@@ -36,6 +40,7 @@ def save_csv(data):
             user_copy = user.copy()
             user_copy["high score"] = str(user_copy["high score"])
             writer.writerow(user_copy)
+
 
 # INPUT BOX CLASS
 
@@ -91,11 +96,12 @@ class Button:
 def login_screen():
     users = load_csv()
 
-    username_box = InputBox(300, 200, 200, 40)
-    password_box = InputBox(300, 260, 200, 40)
+    username_box = InputBox(300, 180, 200, 40)
+    password_box = InputBox(300, 240, 200, 40)
 
-    login_button = Button(300, 330, 200, 50, "Login")
-    register_button = Button(300, 400, 200, 50, "Register")
+    login_button      = Button(300, 310, 200, 50, "Login")
+    register_button   = Button(300, 375, 200, 50, "Register")
+    leaderboard_button = Button(300, 440, 200, 50, "Leaderboard")
 
     message = ""
 
@@ -104,7 +110,13 @@ def login_screen():
         screen.fill((30, 30, 46))
 
         title = FONT.render("LOGIN SYSTEM", True, (255, 255, 255))
-        screen.blit(title, (WIDTH//2 - title.get_width()//2, 100))
+        screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 100))
+
+        # Labels
+        user_label = SMALL_FONT.render("Username:", True, (200, 200, 200))
+        pass_label = SMALL_FONT.render("Password:", True, (200, 200, 200))
+        screen.blit(user_label, (300, 160))
+        screen.blit(pass_label, (300, 220))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -163,17 +175,23 @@ def login_screen():
                     save_csv(users)
                     message = "Account created"
 
+            if leaderboard_button.clicked(event):
+                show_leaderboard(screen)
+                # Reload users in case scores changed during the game session
+                users = load_csv()
+
         username_box.draw(screen)
         password_box.draw(screen)
         login_button.draw(screen)
         register_button.draw(screen)
+        leaderboard_button.draw(screen)
 
         msg_surface = SMALL_FONT.render(message, True, (255, 200, 200))
-        screen.blit(msg_surface, (WIDTH//2 - msg_surface.get_width()//2, 480))
+        screen.blit(msg_surface, (WIDTH // 2 - msg_surface.get_width() // 2, 520))
 
         pygame.display.flip()
 
-# ─────────────────────────────────────────────
+
 
 if __name__ == "__main__":
     login_screen()

@@ -1,9 +1,9 @@
 # Final_Project_CP2
 ***
-![Image of code while running](location of image in folders)
-This project is..
 
+![alt text](image.png)
 ## How to use
+
 ***
 1. You'll need to open a new terminal, type in: "pip install pygame", then press enter and wait till it's done
 2. Close the terminal afterwards by pressing the trashcan icon
